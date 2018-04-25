@@ -8,6 +8,18 @@
 #include "math.h"
 #include "gmath.h"
 
+double max(double a, double b){
+  double ret = a > b ? a : b;
+  return ret;
+
+}
+
+double min(double a, double b){
+  double ret = a < b ? a : b;
+  return ret;
+
+}
+
 /*======== void scanline_convert() ==========
   Inputs: struct matrix *points
           int i
@@ -20,7 +32,148 @@
   Color should be set differently for each polygon.
   ====================*/
 void scanline_convert( struct matrix *points, int i, screen s, zbuffer zb ) {
+  double p1x,p2x,p3x,p1y,p2y,p3y,p1z,p2z,p3z,botx,boty,botz,midx,midy,midz,topx,topy,topz; 
+  p1x = points->m[0][i];
+  p2x = points->m[0][i+1];
+  p3x = points->m[0][i+2];
+  p1y = points->m[1][i];
+  p2y = points->m[1][i+1];
+  p3y = points->m[1][i+2];
+  p1z = points->m[2][i];
+  p2z = points->m[2][i+1];
+  p3z = points->m[2][i+2];
 
+  color c;
+  c.red = rand() % 256;
+  c.blue = rand() % 256;  
+  c.green = rand() % 256;
+  
+  double maxy = max(max(p1y,p2y),p3y);
+  double miny;
+  if(maxy == p1y){
+    topx = p1x;
+    topy = p1y;
+    topz = p1z;
+    miny = min(p2y,p3y); 
+    if(miny==p2y){
+      botx = p2x;
+      boty = p2y;
+      botz = p2z;
+      midx = p3x;
+      midy = p3y;
+      midz = p3z;
+    }
+    else{
+      botx = p3x;
+      boty = p3y;
+      botz = p3z;
+      midx = p2x;
+      midy = p2y;
+      midz = p2z;
+    }
+ }
+  else if(maxy == p2y){
+    topx = p2x;
+    topy = p2y;
+    topz = p2z;
+    miny = min(p3y,p1y);
+    if(miny==p3y){
+      botx = p3x;
+      boty = p3y;
+      botz = p3z;
+      midx = p1x;
+      midy = p1y;
+      midz = p1z;
+    }
+    else{
+      botx = p1x;
+      boty = p1y;
+      botz = p1z;
+      midx = p3x;
+      midy = p3y;
+      midz = p3z;
+    }
+  }
+  else{
+    topx = p3x;
+    topy = p3y;
+    topz = p3z;
+    miny = min(p1y,p2y);
+    if(miny==p1y){
+      botx = p1x;
+      boty = p1y;
+      botz = p1z;
+      midx = p2x;
+      midy = p2y;
+      midz = p2z;
+    }
+    else{
+      botx = p2x;
+      boty = p2y;
+      botz = p2z;
+      midx = p1x;
+      midy = p1y;
+      midz = p1z;
+    }
+  }
+
+  printf("TOPY: %f\n", topy);
+  printf("MIDY: %f\n", midy);
+  printf("BOTY: %f\n\n", boty);
+
+  double x1, y, z1, x2, z2, dx2, dz2, dx1, dz1;
+  x1 = botx;
+  y = boty;
+  z1 = botz;
+  x2 = botx;
+  z2 = botz;
+  dx1 = (topx-botx)/(topy-boty);
+  dz1 = (topz-botz)/(topz-botz);
+
+  if(midy!=boty){
+    dx2 = (midx-botx)/(midy-boty);
+    dz2 = (midz-botz)/(midy-boty);
+    while(y<midy){
+      draw_line(x1,y,z1,x2,y,z2,s,zb,c);
+      x1 += dx1;
+      z1 += dz1;
+      x2 += dx2;
+      z2 += dz2;
+      y++;
+    }
+  }
+  else{
+    draw_line(botx,boty,botz,midx,midy,midz,s,zb,c);
+   }
+
+  y = midy;
+  x2 = midx;
+ 
+  if(topy!=midy){
+    dx2 = (topx-midx)/(topy-midy);
+    dz2 = (topz-midz)/(topy-midy);
+    
+    while(y<topy){
+      draw_line(x1,y,z1,x2,y,z2,s,zb,c);
+      x1 += dx1;
+      z1 += dz1;
+      x2 += dx2;
+      z2 += dz2;
+      y++;
+    }
+  }
+  else{
+    draw_line(topx,topy,topz,midx,midy,midz,s,zb,c);
+  }
+
+  
+
+  
+
+
+
+
+  
 }
 
 /*======== void add_polygon() ==========
@@ -72,8 +225,9 @@ void draw_polygons(struct matrix *polygons, screen s, zbuffer zb, color c ) {
     normal = calculate_normal(polygons, point);
 
     if ( normal[2] > 0 ) {
+      scanline_convert(polygons, point, s, zb);
 
-      draw_line( polygons->m[0][point],
+      /*draw_line( polygons->m[0][point],
                  polygons->m[1][point],
                  polygons->m[2][point],
                  polygons->m[0][point+1],
@@ -93,7 +247,7 @@ void draw_polygons(struct matrix *polygons, screen s, zbuffer zb, color c ) {
                  polygons->m[0][point+2],
                  polygons->m[1][point+2],
                  polygons->m[2][point+2],
-                 s, zb, c);
+                 s, zb, c);*/
     }
   }
 }
@@ -182,7 +336,7 @@ void add_sphere( struct matrix * edges,
       p3 = (p0+step) % (step * (step-1));
 
       //printf("p0: %d\tp1: %d\tp2: %d\tp3: %d\n", p0, p1, p2, p3);
-      if (longt <= step - 2)
+      if (longt < step - 2)
         add_polygon( edges, points->m[0][p0],
                      points->m[1][p0],
                      points->m[2][p0],
@@ -576,6 +730,7 @@ void draw_line(int x0, int y0, double z0,
     }
   }
 
+  //double deltaz = 
   while ( loop_start < loop_end ) {
 
     plot( s, zb, c, x, y, 0);
@@ -595,5 +750,5 @@ void draw_line(int x0, int y0, double z0,
     }
     loop_start++;
   } //end drawing loop
-  plot( s, zb, c, x1, y1, 0 );
+  plot( s, zb, c, x1, y1, 0);
 } //end draw_line

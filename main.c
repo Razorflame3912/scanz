@@ -16,6 +16,7 @@ int main(int argc, char **argv) {
   struct matrix * edges;
   struct matrix * polygons;
   struct matrix * transform;
+  srand(time(NULL));
 
   edges = new_matrix(4, 4);
   transform = new_matrix(4, 4);
