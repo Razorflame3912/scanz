@@ -128,7 +128,7 @@ void scanline_convert( struct matrix *points, int i, screen s, zbuffer zb ) {
   x2 = botx;
   z2 = botz;
   dx1 = (topx-botx)/(topy-boty);
-  dz1 = (topz-botz)/(topz-botz);
+  dz1 = (topz-botz)/(topy-boty);
 
   if(midy!=boty){
     dx2 = (midx-botx)/(midy-boty);
