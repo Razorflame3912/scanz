@@ -148,6 +148,7 @@ void scanline_convert( struct matrix *points, int i, screen s, zbuffer zb ) {
 
   y = midy;
   x2 = midx;
+  z2 = midz;
  
   if(topy!=midy){
     dx2 = (topx-midx)/(topy-midy);
@@ -670,6 +671,7 @@ void draw_line(int x0, int y0, double z0,
   int x, y, d, A, B;
   int dy_east, dy_northeast, dx_east, dx_northeast, d_east, d_northeast;
   int loop_start, loop_end;
+  double z, zt;
 
   //swap points if going right -> left
   int xt, yt;
@@ -678,13 +680,16 @@ void draw_line(int x0, int y0, double z0,
     yt = y0;
     x0 = x1;
     y0 = y1;
+    zt = z0;
     z0 = z1;
+    z1 = zt;
     x1 = xt;
     y1 = yt;
   }
 
   x = x0;
   y = y0;
+  z = z0;
   A = 2 * (y1 - y0);
   B = -2 * (x1 - x0);
   int wide = 0;
@@ -730,10 +735,17 @@ void draw_line(int x0, int y0, double z0,
     }
   }
 
-  //double deltaz = 
+  double dz;
+  if(loop_end != loop_start){
+    dz = (z1-z0)/(loop_end - loop_start);
+  }
+  else{
+    dz = 0;
+  }
+  
   while ( loop_start < loop_end ) {
 
-    plot( s, zb, c, x, y, 0);
+    plot( s, zb, c, x, y, z);
     if ( (wide && ((A > 0 && d > 0) ||
                    (A < 0 && d < 0)))
          ||
@@ -748,7 +760,8 @@ void draw_line(int x0, int y0, double z0,
       y+= dy_east;
       d+= d_east;
     }
+    z += dz;
     loop_start++;
   } //end drawing loop
-  plot( s, zb, c, x1, y1, 0);
+  plot( s, zb, c, x1, y1, z1);
 } //end draw_line
